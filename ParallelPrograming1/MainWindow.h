@@ -1,5 +1,11 @@
 #pragma once
+#include <omp.h>
+#include "mpi.h"
 #include <vector>
+#include <chrono>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 # define PI 3.141592653589793238462643383279502884L 
 
@@ -99,8 +105,8 @@ namespace ParallelPrograming1 {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea2 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
-			System::Windows::Forms::DataVisualization::Charting::Legend^ legend2 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea4 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Legend^ legend4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
 			this->textBoxC = (gcnew System::Windows::Forms::TextBox());
 			this->textBoxLambda = (gcnew System::Windows::Forms::TextBox());
 			this->label1 = (gcnew System::Windows::Forms::Label());
@@ -195,7 +201,7 @@ namespace ParallelPrograming1 {
 			this->textBoxI->Name = L"textBoxI";
 			this->textBoxI->Size = System::Drawing::Size(100, 22);
 			this->textBoxI->TabIndex = 19;
-			this->textBoxI->Text = L"40";
+			this->textBoxI->Text = L"800";
 			// 
 			// label4
 			// 
@@ -244,7 +250,7 @@ namespace ParallelPrograming1 {
 			this->textBoxK->Name = L"textBoxK";
 			this->textBoxK->Size = System::Drawing::Size(100, 22);
 			this->textBoxK->TabIndex = 14;
-			this->textBoxK->Text = L"4000";
+			this->textBoxK->Text = L"800";
 			// 
 			// textBoxThickness
 			// 
@@ -291,7 +297,7 @@ namespace ParallelPrograming1 {
 			this->textBoxCurrK->Name = L"textBoxCurrK";
 			this->textBoxCurrK->Size = System::Drawing::Size(100, 22);
 			this->textBoxCurrK->TabIndex = 27;
-			this->textBoxCurrK->Text = L"2256";
+			this->textBoxCurrK->Text = L"500";
 			// 
 			// label8
 			// 
@@ -310,7 +316,7 @@ namespace ParallelPrograming1 {
 			this->textBoxCurrI->Name = L"textBoxCurrI";
 			this->textBoxCurrI->Size = System::Drawing::Size(100, 22);
 			this->textBoxCurrI->TabIndex = 25;
-			this->textBoxCurrI->Text = L"10";
+			this->textBoxCurrI->Text = L"200";
 			// 
 			// label9
 			// 
@@ -380,10 +386,10 @@ namespace ParallelPrograming1 {
 			// 
 			// graphic
 			// 
-			chartArea2->Name = L"ChartArea1";
-			this->graphic->ChartAreas->Add(chartArea2);
-			legend2->Name = L"Legend1";
-			this->graphic->Legends->Add(legend2);
+			chartArea4->Name = L"ChartArea1";
+			this->graphic->ChartAreas->Add(chartArea4);
+			legend4->Name = L"Legend1";
+			this->graphic->Legends->Add(legend4);
 			this->graphic->Location = System::Drawing::Point(12, 12);
 			this->graphic->Name = L"graphic";
 			this->graphic->Size = System::Drawing::Size(1000, 700);
@@ -427,7 +433,13 @@ namespace ParallelPrograming1 {
 
 		}
 #pragma endregion
-	private: System::Void MainWindow_Load(System::Object^ sender, System::EventArgs^ e) {
+	private: System::Void MainWindow_Load(System::Object^ sender, System::EventArgs^ e) 
+	{
+		/*launch_Click(sender, e);
+
+
+
+		Application::Exit();*/
 	}
 	private: System::Void launch_Click(System::Object^ sender, System::EventArgs^ e)
 	{
@@ -448,8 +460,24 @@ namespace ParallelPrograming1 {
 		
 		std::pair<std::vector<double>, std::vector<double>> data;
 		data = scheme(this->c, this->constLambda, this->T, this->K, this->L, this->I, this->l, currI, currK);
+		
+		//std::ifstream fin("valuesPython1.txt");
+		//double size = data.second.size();
+		//double value;
+		//double sum = 0;
+		//
+		//for (double j = 0; j < size; j++)
+		//{
+		//	fin >> value;
+		//	sum += pow((value - data.second[j]), 2);
+		//	//std::cout << j << " " << value << " " << data.second[j];
+		//	//std::cout << std::endl;
+		//}
+		//fin.close();
+		//double MSE = sum / size;
+		//std::cout << "MSE " << MSE << std::endl;
 
-		Series^ series = gcnew Series(L"Явная разностная схема, " + "I = " + I + " K = " + K);
+		Series^ series = gcnew Series(L"Явная разностная схема, " + "I = " + I + " K = " + K + " " + currColorIndex);
 		series->Color = nextColor;
 		series->IsVisibleInLegend = true;
 		series->IsXValueIndexed = true;
@@ -472,6 +500,7 @@ namespace ParallelPrograming1 {
 
 		array<String^>^ row = { this->I.ToString(), this->K.ToString(), delta1.ToString(), delta2.ToString(), delta.ToString() };
 		this->table->Rows->Add(row);
+		std::cout << std::endl;
 	}
 	private: System::Void clear_Click(System::Object^ sender, System::EventArgs^ e)
 	{
@@ -482,7 +511,7 @@ namespace ParallelPrograming1 {
 };
 }
 std::pair<std::vector<double>, std::vector<double>> scheme(double c, double constLambda, double T, int K, double L, int I, double l, int currI, int currK)
-{
+{	
 	c *= pow(10, 14);
 	constLambda *= pow(10, -6);
 	T *= pow(10, -20);
@@ -508,11 +537,11 @@ std::pair<std::vector<double>, std::vector<double>> scheme(double c, double cons
 
 	std::vector<std::vector<double>> u(K + 1, std::vector<double>(I + 1, 0));
 
-	for (int i = 0; i <= I; i++) 
+	for (int i = 0; i <= I; i++)
 	{
 		u[0][i] = 0;
 	}
-	
+
 	for (int i = 0; i <= I; i++)
 	{
 		u[1][i] = u[0][i];
@@ -520,11 +549,17 @@ std::pair<std::vector<double>, std::vector<double>> scheme(double c, double cons
 
 	for (int k = 2; k < K + 1; k++)
 	{
-		u[k][0] = sin(2 *  PI * c * k * ht / constLambda);
+		u[k][0] = sin(2 * PI * c * k * ht / constLambda);
 	}
 
+	//Последовательный вариант программы
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	__pragma(loop(no_vector))
 	for (int k = 1; k < K; k++)
 	{
+		__pragma(loop(no_vector))
 		for (int i = 1; i < I; i++)
 		{
 			u[k + 1][i] = u[k][i] * (2 - 2 * gamma - pow((c * ht * PI / l), 2)) + gamma * (u[k][i + 1] + u[k][i - 1]) - u[k - 1][i];
@@ -532,6 +567,36 @@ std::pair<std::vector<double>, std::vector<double>> scheme(double c, double cons
 		u[k + 1][I] = u[k + 1][I - 1];
 	}
 
+	auto end = std::chrono::high_resolution_clock::now();
+
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+	// Выводим затраченное время в консоль
+	std::cout << "Sequential version was completed in " << duration << " milliseconds" << std::endl;
+
+	
+
+//	// Параллельный вариант работы программы openmp
+//
+//	auto start = std::chrono::high_resolution_clock::now();
+//
+//	for (int k = 1; k < K; k++)
+//	{
+//#pragma omp parallel for
+//		for (int i = 1; i < I; i++)
+//		{
+//			u[k + 1][i] = u[k][i] * (2 - 2 * gamma - pow((c * ht * PI / l), 2)) + gamma * (u[k][i + 1] + u[k][i - 1]) - u[k - 1][i];
+//		}
+//		u[k + 1][I] = u[k + 1][I - 1];
+//	}
+//
+//	auto end = std::chrono::high_resolution_clock::now();
+//
+//	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//
+//	// Выводим затраченное время в консоль
+//	std::cout << "Parallel version was completed in " << duration << " milliseconds" << std::endl;
+	
 	std::vector<double> temp;
 
 	for (int k = 0; k < K + 1; k++)
