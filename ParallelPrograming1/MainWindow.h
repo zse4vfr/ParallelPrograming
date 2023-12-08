@@ -11,7 +11,8 @@
 
 std::pair<std::vector<double>, std::vector<double>> scheme(double c, double constLambda, double T, int K, double L, int I, double l, int currI, int currK);
 
-namespace ParallelPrograming1 {
+namespace ParallelPrograming1 
+{
 
 	using namespace System;
 	using namespace System::ComponentModel;
@@ -79,8 +80,8 @@ namespace ParallelPrograming1 {
 	private: double L;
 	private: int I;
 	private: double l;
-	private: double currI;
-	private: double currK;
+	private: int currI;
+	private: int currK;
 	private: int currColorIndex = 0;
 
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ dataGridViewTextBoxColumn1;
@@ -105,8 +106,8 @@ namespace ParallelPrograming1 {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea4 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
-			System::Windows::Forms::DataVisualization::Charting::Legend^ legend4 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
+			System::Windows::Forms::DataVisualization::Charting::ChartArea^ chartArea1 = (gcnew System::Windows::Forms::DataVisualization::Charting::ChartArea());
+			System::Windows::Forms::DataVisualization::Charting::Legend^ legend1 = (gcnew System::Windows::Forms::DataVisualization::Charting::Legend());
 			this->textBoxC = (gcnew System::Windows::Forms::TextBox());
 			this->textBoxLambda = (gcnew System::Windows::Forms::TextBox());
 			this->label1 = (gcnew System::Windows::Forms::Label());
@@ -386,10 +387,10 @@ namespace ParallelPrograming1 {
 			// 
 			// graphic
 			// 
-			chartArea4->Name = L"ChartArea1";
-			this->graphic->ChartAreas->Add(chartArea4);
-			legend4->Name = L"Legend1";
-			this->graphic->Legends->Add(legend4);
+			chartArea1->Name = L"ChartArea1";
+			this->graphic->ChartAreas->Add(chartArea1);
+			legend1->Name = L"Legend1";
+			this->graphic->Legends->Add(legend1);
 			this->graphic->Location = System::Drawing::Point(12, 12);
 			this->graphic->Name = L"graphic";
 			this->graphic->Size = System::Drawing::Size(1000, 700);
@@ -434,13 +435,7 @@ namespace ParallelPrograming1 {
 		}
 #pragma endregion
 	private: System::Void MainWindow_Load(System::Object^ sender, System::EventArgs^ e) 
-	{
-		/*launch_Click(sender, e);
-
-
-
-		Application::Exit();*/
-	}
+	{}
 	private: System::Void launch_Click(System::Object^ sender, System::EventArgs^ e)
 	{
 		this->c = System::Double::Parse(this->textBoxC->Text);
@@ -450,17 +445,17 @@ namespace ParallelPrograming1 {
 		this->L = System::Double::Parse(this->textBoxL->Text);
 		this->I = System::Int32::Parse(this->textBoxI->Text);
 		this->l = System::Double::Parse(this->textBoxThickness->Text);
-		this->currI = System::Double::Parse(this->textBoxCurrI->Text);
-		this->currK = System::Double::Parse(this->textBoxCurrK->Text);
+		this->currI = System::Int32::Parse(this->textBoxCurrI->Text);
+		this->currK = System::Int32::Parse(this->textBoxCurrK->Text);
 
-		array<Color>^ colors = { Color::Blue, Color::Red, Color::Green, Color::Yellow, Color::Brown, Color::Purple }; 		
+		array<Color>^ colors = { Color::Green, Color::Blue, Color::Red, Color::Yellow, Color::Brown, Color::Purple };
 
 		Color nextColor = colors[currColorIndex % colors->Length];
 		currColorIndex++;
 		
 		std::pair<std::vector<double>, std::vector<double>> data;
 		data = scheme(this->c, this->constLambda, this->T, this->K, this->L, this->I, this->l, currI, currK);
-		
+				
 		//std::ifstream fin("valuesPython1.txt");
 		//double size = data.second.size();
 		//double value;
@@ -487,7 +482,16 @@ namespace ParallelPrograming1 {
 		{
 			series->Points->AddXY(data.first[i], data.second[i]);
 		}
+		
+		FillTable(data);
+		
+		std::cout << std::endl;
 
+		ChartImageFormat imageFormat = ChartImageFormat::Png;
+		this->graphic->SaveImage("image.png", imageFormat);
+	}
+	private: System::Void FillTable(std::pair<std::vector<double>, std::vector<double>> data)
+	{
 		std::pair<std::vector<double>, std::vector<double>> data2;
 		data2 = scheme(this->c, this->constLambda, this->T, this->K, this->L, 2 * this->I, this->l, 2 * currI, currK);
 
@@ -500,7 +504,6 @@ namespace ParallelPrograming1 {
 
 		array<String^>^ row = { this->I.ToString(), this->K.ToString(), delta1.ToString(), delta2.ToString(), delta.ToString() };
 		this->table->Rows->Add(row);
-		std::cout << std::endl;
 	}
 	private: System::Void clear_Click(System::Object^ sender, System::EventArgs^ e)
 	{
@@ -509,100 +512,4 @@ namespace ParallelPrograming1 {
 		this->currColorIndex = 0;
 	}
 };
-}
-std::pair<std::vector<double>, std::vector<double>> scheme(double c, double constLambda, double T, int K, double L, int I, double l, int currI, int currK)
-{	
-	c *= pow(10, 14);
-	constLambda *= pow(10, -6);
-	T *= pow(10, -20);
-	L *= pow(10, -6);
-	l *= pow(10, -6);
-
-	double ht = T / K;
-	double hz = L / I;
-
-	double gamma = pow((c * ht / hz), 2);
-
-	std::vector<double> arrayZ(I + 1, 0);
-	for (int i = 0; i < I + 1; i++)
-	{
-		arrayZ[i] = i * hz;
-	}
-
-	std::vector<double> arrayT(K + 1, 0);
-	for (int i = 0; i < K + 1; i++)
-	{
-		arrayT[i] = i * ht;
-	}
-
-	std::vector<std::vector<double>> u(K + 1, std::vector<double>(I + 1, 0));
-
-	for (int i = 0; i <= I; i++)
-	{
-		u[0][i] = 0;
-	}
-
-	for (int i = 0; i <= I; i++)
-	{
-		u[1][i] = u[0][i];
-	}
-
-	for (int k = 2; k < K + 1; k++)
-	{
-		u[k][0] = sin(2 * PI * c * k * ht / constLambda);
-	}
-
-	//Последовательный вариант программы
-
-	auto start = std::chrono::high_resolution_clock::now();
-
-	__pragma(loop(no_vector))
-	for (int k = 1; k < K; k++)
-	{
-		__pragma(loop(no_vector))
-		for (int i = 1; i < I; i++)
-		{
-			u[k + 1][i] = u[k][i] * (2 - 2 * gamma - pow((c * ht * PI / l), 2)) + gamma * (u[k][i + 1] + u[k][i - 1]) - u[k - 1][i];
-		}
-		u[k + 1][I] = u[k + 1][I - 1];
-	}
-
-	auto end = std::chrono::high_resolution_clock::now();
-
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-	// Выводим затраченное время в консоль
-	std::cout << "Sequential version was completed in " << duration << " milliseconds" << std::endl;
-
-	
-
-//	// Параллельный вариант работы программы openmp
-//
-//	auto start = std::chrono::high_resolution_clock::now();
-//
-//	for (int k = 1; k < K; k++)
-//	{
-//#pragma omp parallel for
-//		for (int i = 1; i < I; i++)
-//		{
-//			u[k + 1][i] = u[k][i] * (2 - 2 * gamma - pow((c * ht * PI / l), 2)) + gamma * (u[k][i + 1] + u[k][i - 1]) - u[k - 1][i];
-//		}
-//		u[k + 1][I] = u[k + 1][I - 1];
-//	}
-//
-//	auto end = std::chrono::high_resolution_clock::now();
-//
-//	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-//
-//	// Выводим затраченное время в консоль
-//	std::cout << "Parallel version was completed in " << duration << " milliseconds" << std::endl;
-	
-	std::vector<double> temp;
-
-	for (int k = 0; k < K + 1; k++)
-	{
-		temp.push_back(u[k][currI]);
-	}
-
-	return std::make_pair(arrayT, temp);
 }
